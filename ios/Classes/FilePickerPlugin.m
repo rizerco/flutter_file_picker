@@ -204,7 +204,7 @@
     @try{
         self.documentPickerController = [[UIDocumentPickerViewController alloc]
                                          initWithDocumentTypes: isDirectory ? @[@"public.folder"] : self.allowedExtensions
-                                         inMode: isDirectory ? UIDocumentPickerModeOpen : UIDocumentPickerModeImport];
+                                         inMode: UIDocumentPickerModeOpen];
     } @catch (NSException * e) {
         Log(@"Couldn't launch documents file picker. Probably due to iOS version being below 11.0 and not having the iCloud entitlement. If so, just make sure to enable it for your app in Xcode. Exception was: %@", e);
         _result = nil;
@@ -392,38 +392,16 @@ didPickDocumentsAtURLs:(NSArray<NSURL *> *)urls{
         _result = nil;
         return;
     }
-    NSMutableArray<NSURL *> *newUrls = [NSMutableArray new];
-    for (NSURL *url in urls) {
-        // Create file URL to temporary folder
-        NSURL *tempURL = [NSURL fileURLWithPath:NSTemporaryDirectory()];
-        // Append filename (name+extension) to URL
-        tempURL = [tempURL URLByAppendingPathComponent:url.lastPathComponent];
-        NSError *error;
-        // If file with same name exists remove it (replace file with new one)
-        if ([[NSFileManager defaultManager] fileExistsAtPath:tempURL.path]) {
-            [[NSFileManager defaultManager] removeItemAtPath:tempURL.path error:&error];
-            if (error) {
-                NSLog(@"%@", error.localizedDescription);
-            }
-        }
-        // Move file from app_id-Inbox to tmp/filename
-        [[NSFileManager defaultManager] moveItemAtPath:url.path toPath:tempURL.path error:&error];
-        if (error) {
-            NSLog(@"%@", error.localizedDescription);
-        } else {
-            [newUrls addObject:tempURL];
-        }
-    }
     
     [self.documentPickerController dismissViewControllerAnimated:YES completion:nil];
     
-    if(controller.documentPickerMode == UIDocumentPickerModeOpen) {
-        _result([newUrls objectAtIndex:0].path);
-        _result = nil;
-        return;
-    }
+    // if(controller.documentPickerMode == UIDocumentPickerModeOpen) {
+    //     _result([urls objectAtIndex:0].path);
+    //     _result = nil;
+    //     return;
+    // }
     
-    [self handleResult: newUrls];
+    [self handleResult: urls];
 }
 #endif // PICKER_DOCUMENT
 
